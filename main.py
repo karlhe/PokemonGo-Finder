@@ -451,7 +451,8 @@ def get_args():
         "only": None,
         "onlylure": False,
         "port": 5000,
-        "step_limit": 4
+        "step_limit": 4,
+        "distance_limit": None
     }
     # load config file
     with open('config.json') as data_file:
@@ -649,9 +650,11 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
         pokename = pokemonsJSON[pokeid]
         if args.ignore:
             if pokename.lower() in ignore or pokeid in ignore:
+                debug("{} was on the `ignore` list.".format(pokename))
                 continue
         elif args.only:
             if pokename.lower() not in only and pokeid not in only:
+                debug("{} was not on the `only` list.".format(pokename))
                 continue
 
         disappear_timestamp = time.time() + poke.TimeTillHiddenMs \
@@ -662,6 +665,17 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
                 transform_from_wgs_to_gcj(Location(poke.Latitude,
                     poke.Longitude))
 
+        # Skip Pokemon outside of distance_limit
+        # This only really makes sense if step_limit = 1, otherwise you get a swiss cheese map
+        if int(args.step_limit) == 1 and args.distance_limit:
+            origin_coords = (step_lat, step_long)
+            poke_coords = (poke.Latitude, poke.Longitude)
+            distance = distance_in_meters(origin_coords, poke_coords)
+            if distance > int(args.distance_limit):
+                debug("Pokemon {} skipped due to being {}m away.".format(pokename, distance))
+                continue
+            else:
+                debug("Pokemon {} found {}m away.".format(pokename, distance))
 
         pokemon_obj = {
             "lat": poke.Latitude,
@@ -672,6 +686,7 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
         }
 
         if poke.SpawnPointId not in pokemons:
+            debug("Notifying about {}".format(pokename))
             notifier.pokemon_found(pokemon_obj)
 
         pokemons[poke.SpawnPointId] = pokemon_obj

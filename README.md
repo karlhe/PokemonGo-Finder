@@ -9,6 +9,12 @@ Instead of from the command-line, all arguments are read from a `config.json` fi
 
 See `config.json.sample`.
 
+Optional arguments:
+
+* `distance_limit`: Given an Integer representing meters, only shows Pokemon within the limit. Only applies if `step_limit=1`.
+* `only`: Comma-separated list of Pokemon to notify on. Cannot be used at the same time as `ignore`.
+* `ignore`: Comma-separated list of Pokemon to ignore. Cannot be used at the same time as `only`.
+
 It is also recommended to use your own Google Maps API key, set it in `credentials.json`.
 
 See `credentials.json.sample`.

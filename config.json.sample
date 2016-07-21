@@ -4,7 +4,6 @@
   "password": "abc123",
   "step_limit": 1,
   "location": "123 Fake Street, Springfield, IL",
-  "notify": "dragonite, charizard",
   "slack_key": "abc123",
   "slack_channel": "#pokemon"
 }

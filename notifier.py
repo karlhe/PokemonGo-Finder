@@ -3,24 +3,13 @@ from geopy.geocoders import Nominatim
 from datetime import datetime
 import requests
 
-wanted_pokemon = None
-unwanted_pokemon = None
-
 # Initialize object
 def init():
 	# global pushbullet_client, wanted_pokemon
-	global wanted_pokemon, unwanted_pokemon, slack_key, slack_channel
+	global slack_key, slack_channel
 	# load pushbullet key
 	with open('config.json') as data_file:
 		data = json.load(data_file)
-
-		# get list of pokemon to send notifications for
-		if "notify" in data:
-			wanted_pokemon = _str( data["notify"] ).split(",")
-			wanted_pokemon = [a.lower() for a in wanted_pokemon]
-		if "ignore" in data:
-			unwanted_pokemon = _str( data["ignore"] ).split(",")
-			unwanted_pokemon = [a.lower() for a in unwanted_pokemon]
 
 		# get slack details
 		slack_key = _str( data["slack_key"] )
@@ -35,15 +24,6 @@ def _str(s):
 def pokemon_found(pokemon):
 	# get name
 	pokename = _str( pokemon["name"] ).lower()
-	# check array
-	if wanted_pokemon:
-		if not pokename in wanted_pokemon:
-			return
-	if unwanted_pokemon:
-		if pokename in unwanted_pokemon:
-			return
-
-	print("Found {}".format(pokename))
 
 	# get address
 	coords = "{}, {}".format(str(pokemon["lat"]), str(pokemon["lng"]))
