@@ -12,6 +12,8 @@ See `config.json.sample`.
 
 It is also recommended to use your own Google Maps API key, set it in `credentials.json`.
 
+See `credentials.json.sample`.
+
 ## Install
 
 Must use Python 2.7 due to protobuf dependency.
