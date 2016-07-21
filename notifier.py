@@ -32,13 +32,13 @@ def pokemon_found(pokemon):
 	address = ",".join(location.address.split(",")[0:2])
 
 	# Locate pokemon on GMAPS
-	gMaps = "http://maps.google.com/maps?q={},{}&24z".format(str(pokemon["lat"]), str(pokemon["lng"]))
+	maps_link = "http://maps.google.com/maps?q={},{}&20z".format(str(pokemon["lat"]), str(pokemon["lng"]))
 
 	# Get disappearance time
 	disappear_time = str(datetime.fromtimestamp(pokemon["disappear_time"]).strftime("%I:%M%p").lstrip('0'))
 
 	# Create notification
-	notification_text = "*{}* is here until *{}* at *{}* ({})".format(_str(pokemon["name"]), disappear_time, address, gMaps)
+	notification_text = "*{}* is here until *{}* at *{}* ({})".format(_str(pokemon["name"]), disappear_time, address, maps_link)
 
 	# Post to Slack
 	post_url = "https://slack.com/api/chat.postMessage"
