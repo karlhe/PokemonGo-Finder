@@ -23,7 +23,7 @@ def _str(s):
 # Notify user for discovered Pokemon
 def pokemon_found(pokemon):
 	# get name
-	pokename = _str( pokemon["name"] ).lower()
+	pokename = _str(pokemon["name"]).lower()
 
 	# get address
 	coords = "{}, {}".format(str(pokemon["lat"]), str(pokemon["lng"]))

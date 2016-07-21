@@ -650,11 +650,11 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
         pokename = pokemonsJSON[pokeid]
         if args.ignore:
             if pokename.lower() in ignore or pokeid in ignore:
-                debug("{} was on the `ignore` list.".format(pokename))
+                debug("{} was on the `ignore` list.".format(pokename.encode('utf-8')))
                 continue
         elif args.only:
             if pokename.lower() not in only and pokeid not in only:
-                debug("{} was not on the `only` list.".format(pokename))
+                debug("{} was not on the `only` list.".format(pokename.encode('utf-8')))
                 continue
 
         disappear_timestamp = time.time() + poke.TimeTillHiddenMs \
@@ -672,10 +672,10 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
             poke_coords = (poke.Latitude, poke.Longitude)
             distance = distance_in_meters(origin_coords, poke_coords)
             if distance > int(args.distance_limit):
-                debug("Pokemon {} skipped due to being {}m away.".format(pokename, distance))
+                debug("Pokemon {} skipped due to being {}m away.".format(pokename.encode('utf-8'), distance))
                 continue
             else:
-                debug("Pokemon {} found {}m away.".format(pokename, distance))
+                debug("Pokemon {} found {}m away.".format(pokename.encode('utf-8'), distance))
 
         pokemon_obj = {
             "lat": poke.Latitude,
@@ -686,7 +686,7 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
         }
 
         if poke.SpawnPointId not in pokemons:
-            debug("Notifying about {}".format(pokename))
+            debug("Notifying about {}".format(pokename.encode('utf-8')))
             notifier.pokemon_found(pokemon_obj)
 
         pokemons[poke.SpawnPointId] = pokemon_obj
