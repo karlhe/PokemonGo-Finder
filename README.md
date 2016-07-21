@@ -2,8 +2,7 @@
 
 This is a fork of [jxmorris12/PokemonGo-Finder](https://github.com/jxmorris12/PokemonGo-Finder), a fork of [the popular PokemonGo-Map repository](https://github.com/AHAAAAAAA/PokemonGo-Map), with the purpose of notifying users where to find nearby Pokemon. All API and map functionality was left untouched.
 
-## Configure PushBullet
-To generate a token for sending yourself notifications using the Pushbullet API, create an account on [Pushbullet](https://www.pushbullet.com/). Then click your avatar and select the "My Account" page. Scroll to where you see "Access Tokens" and click the "Create Access Token" button. Copy this hash, you'll need it later.
+This fork is focused on Slack integration, with the possibility of other integrations in the future.
 
 ## Config File
 Instead of from the command-line, all arguments are read from a `config.json` file.
