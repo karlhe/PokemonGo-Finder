@@ -62,7 +62,7 @@ def pokemon_found(pokemon):
 
 	# Post to Slack
 	post_url = "https://slack.com/api/chat.postMessage"
-	post_params = { "token": slack_key, "channel": slack_channel, "text": notification_text }
+	post_params = { "token": slack_key, "as_user": "true", "channel": slack_channel, "text": notification_text }
 	response = requests.post(post_url, data=post_params)
 
 init()
