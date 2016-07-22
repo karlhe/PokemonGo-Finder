@@ -410,7 +410,8 @@ def get_heartbeat(service,
 
     try:
         payload = response.payload[0]
-    except (AttributeError, IndexError):
+    except (AttributeError, IndexError), e:
+        debug("Failed to get heartbeat ({})".format(e))
         return
 
     heartbeat = pokemon_pb2.ResponseEnvelop.HeartbeatPayload()
@@ -452,7 +453,8 @@ def get_args():
         "onlylure": False,
         "port": 5000,
         "step_limit": 4,
-        "distance_limit": None
+        "notify_distance": None,
+        "notify_ignore": None,
     }
     # load config file
     with open('config.json') as data_file:
@@ -554,6 +556,10 @@ def main():
     elif args.only:
         only = [i.lower().strip() for i in args.only.split(',')]
 
+    notify_ignore = []
+    if args.notify_ignore:
+        notify_ignore = [i.lower().strip() for i in args.notify_ignore.split(',')]
+
     pos = 1
     x = 0
     y = 0
@@ -573,7 +579,7 @@ def main():
         (x, y) = (x + dx, y + dy)
 
         process_step(args, api_endpoint, access_token, profile_response,
-                     pokemonsJSON, ignore, only)
+                     pokemonsJSON, ignore, only, notify_ignore)
 
         print('Completed: ' + str(
             ((step+1) + pos * .25 - .25) / (steplimit2) * 100) + '%')
@@ -592,7 +598,7 @@ def main():
 
 
 def process_step(args, api_endpoint, access_token, profile_response,
-                 pokemonsJSON, ignore, only):
+                 pokemonsJSON, ignore, only, notify_ignore):
     print('[+] Searching for Pokemon at location {} {}'.format(FLOAT_LAT, FLOAT_LONG))
     origin = LatLng.from_degrees(FLOAT_LAT, FLOAT_LONG)
     step_lat = FLOAT_LAT
@@ -617,11 +623,10 @@ def process_step(args, api_endpoint, access_token, profile_response,
         try:
             for cell in hh.cells:
                 for wild in cell.WildPokemon:
-                    hash = wild.SpawnPointId + ':' \
-                        + str(wild.pokemon.PokemonId)
-                    if hash not in seen:
+                    _hash = wild.SpawnPointId + ':' + str(wild.pokemon.PokemonId)
+                    if _hash not in seen:
                         visible.append(wild)
-                        seen.add(hash)
+                        seen.add(_hash)
                 if cell.Fort:
                     for Fort in cell.Fort:
                         if Fort.Enabled == True:
@@ -642,7 +647,8 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
                                 if (expire_time != 0 or not args.onlylure):
                                     pokestops[Fort.FortId] = [Fort.Latitude,
                                                               Fort.Longitude, expire_time]
-        except AttributeError:
+        except AttributeError, e:
+            debug("Encountered error while searching for pokemon: {}".format(str(e)))
             break
 
     for poke in visible:
@@ -650,11 +656,9 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
         pokename = pokemonsJSON[pokeid]
         if args.ignore:
             if pokename.lower() in ignore or pokeid in ignore:
-                debug("{} was on the `ignore` list.".format(pokename.encode('utf-8')))
                 continue
         elif args.only:
             if pokename.lower() not in only and pokeid not in only:
-                debug("{} was not on the `only` list.".format(pokename.encode('utf-8')))
                 continue
 
         disappear_timestamp = time.time() + poke.TimeTillHiddenMs \
@@ -665,18 +669,6 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
                 transform_from_wgs_to_gcj(Location(poke.Latitude,
                     poke.Longitude))
 
-        # Skip Pokemon outside of distance_limit
-        # This only really makes sense if step_limit = 1, otherwise you get a swiss cheese map
-        if int(args.step_limit) == 1 and args.distance_limit:
-            origin_coords = (step_lat, step_long)
-            poke_coords = (poke.Latitude, poke.Longitude)
-            distance = distance_in_meters(origin_coords, poke_coords)
-            if distance > int(args.distance_limit):
-                debug("Pokemon {} skipped due to being {}m away.".format(pokename.encode('utf-8'), distance))
-                continue
-            else:
-                debug("Pokemon {} found {}m away.".format(pokename.encode('utf-8'), distance))
-
         pokemon_obj = {
             "lat": poke.Latitude,
             "lng": poke.Longitude,
@@ -686,8 +678,28 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
         }
 
         if poke.SpawnPointId not in pokemons:
-            debug("Notifying about {}".format(pokename.encode('utf-8')))
-            notifier.pokemon_found(pokemon_obj)
+            do_notify = True
+
+            # Skip Pokemon on ignore list
+            if do_notify == True and args.notify_ignore:
+                if pokename.lower() in notify_ignore or pokeid in notify_ignore:
+                    debug("Pokemon {} was ignored.".format(pokename.encode('utf-8')))
+                    do_notify = False
+
+            # Skip Pokemon outside of given distance
+            # This only really makes sense if step_limit = 1, otherwise you get a swiss cheese map
+            if do_notify == True and args.notify_distance:
+                origin_coords = (step_lat, step_long)
+                poke_coords = (poke.Latitude, poke.Longitude)
+                distance = distance_in_meters(origin_coords, poke_coords)
+                debug("Pokemon {} found {}m away.".format(pokename.encode('utf-8'), distance))
+                if distance > int(args.notify_distance):
+                    debug("Pokemon {} was too far away.".format(pokename.encode('utf-8'), distance))
+                    do_notify = False
+
+            if do_notify == True:
+                debug("Notifying on {}...".format(pokename.encode('utf-8')))
+                notifier.pokemon_found(pokemon_obj)
 
         pokemons[poke.SpawnPointId] = pokemon_obj
 

@@ -5,5 +5,7 @@
   "step_limit": 1,
   "location": "123 Fake Street, Springfield, IL",
   "slack_key": "abc123",
-  "slack_channel": "#pokemon"
+  "slack_channel": "#pokemon",
+  "notify_distance": None,
+  "notify_ignore": "doduo, zubat"
 }
