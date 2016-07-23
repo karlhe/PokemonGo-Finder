@@ -54,7 +54,6 @@ SESSION.verify = False
 
 global_password = None
 global_token = None
-access_token = None
 DEBUG = True
 VERBOSE_DEBUG = False  # if you want to write raw request/response to the console
 COORDS_LATITUDE = 0
@@ -66,7 +65,6 @@ NEXT_LAT = 0
 NEXT_LONG = 0
 auto_refresh = 0
 default_step = 0.001
-api_endpoint = None
 pokemons = {}
 gyms = {}
 pokestops = {}
@@ -80,8 +78,10 @@ origin_lat, origin_lon = None, None
 is_ampm_clock = False
 
 # stuff for in-background search thread
-
 search_thread = None
+
+# Login session
+login_session = None
 
 def memoize(obj):
     cache = obj.cache = {}
@@ -208,7 +208,7 @@ def retrying_api_req(service, api_endpoint, access_token, *args, **kwargs):
         except (InvalidURL, ConnectionError, DecodeError), e:
             debug('retrying_api_req: request error ({}), retrying'.format(
                 str(e)))
-        time.sleep(1)
+        time.sleep(5)
 
 
 def api_req(service, api_endpoint, access_token, *args, **kwargs):
@@ -262,11 +262,12 @@ def get_api_endpoint(service, access_token, api=API_URL):
             debug(
                 'retrying_get_profile: get_profile returned no api_url, retrying')
             profile_response = None
-            continue
-        if not len(profile_response.api_url):
+            time.sleep(10)
+        elif not len(profile_response.api_url):
             debug(
                 'get_api_endpoint: retrying_get_profile returned no-len api_url, retrying')
             profile_response = None
+            time.sleep(10)
 
     return 'https://%s/rpc' % profile_response.api_url
 
@@ -279,11 +280,12 @@ def retrying_get_profile(service, access_token, api, useauth, *reqq):
             debug(
                 'retrying_get_profile: get_profile returned no payload, retrying')
             profile_response = None
-            continue
-        if not profile_response.payload:
+            time.sleep(10)
+        elif not profile_response.payload:
             debug(
                 'retrying_get_profile: get_profile returned no-len payload, retrying')
             profile_response = None
+            time.sleep(10)
 
     return profile_response
 
@@ -467,8 +469,11 @@ def get_args():
             vars(namespace)[key] = default_args[key]
         return namespace
 
-@memoize
 def login(args):
+    global login_session
+    if login_session:
+        return login_session
+
     global global_password
     if not global_password:
       if args.password:
@@ -509,7 +514,8 @@ def login(args):
     for curr in profile.profile.currency:
         print '[+] {}: {}'.format(curr.type, curr.amount)
 
-    return api_endpoint, access_token, profile_response
+    login_session = api_endpoint, access_token, profile_response
+    return login_session
 
 def main():
     full_path = os.path.realpath(__file__)
@@ -649,6 +655,10 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
                                                               Fort.Longitude, expire_time]
         except AttributeError, e:
             debug("Encountered error while searching for pokemon: {}".format(str(e)))
+            # Reset login session if problems happen
+            global login_session, global_token
+            login_session = None
+            global_token = None
             break
 
     for poke in visible:
