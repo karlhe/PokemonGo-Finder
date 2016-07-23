@@ -11,9 +11,9 @@ See `config.json.sample`.
 
 Optional arguments:
 
-* `distance_limit`: Given an Integer representing meters, only shows Pokemon within the limit. Only applies if `step_limit=1`.
-* `only`: Comma-separated list of Pokemon to notify on. Cannot be used at the same time as `ignore`.
-* `ignore`: Comma-separated list of Pokemon to ignore. Cannot be used at the same time as `only`.
+* `step_limit`: Determines how far the "player" will search. A value of `1` is the same as a stationary player.
+* `notify_distance`: Distance in meters within which to send notifications. if set to `None` will notify on everything.
+* `notify_ignore`: Comma-separated list of Pokemon to not send notifications for.
 
 It is also recommended to use your own Google Maps API key, set it in `credentials.json`.
 
