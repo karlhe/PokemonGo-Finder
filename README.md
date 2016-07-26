@@ -11,9 +11,10 @@ See `config.json.sample`.
 
 Optional arguments:
 
-* `step_limit`: Determines how far the "player" will search. A value of `1` is the same as a stationary player.
+* `step_limit`: Determines how far the "player" will search. A value of `1` is the same as a stationary player. A value of `2` means the player searches in 4 locations. And etcetera.
 * `notify_distance`: Distance in meters within which to send notifications. if set to `None` will notify on everything.
 * `notify_ignore`: Comma-separated list of Pokemon to not send notifications for.
+* `notify_far_ignore`: If set along with `notify_distance`, will notify outside of the `notify_distance` if the Pokemon does not exist in `notify_far_ignore`. Useful for rarer pokemon.
 
 It is also recommended to use your own Google Maps API key, set it in `credentials.json`.
 
@@ -21,7 +22,7 @@ See `credentials.json.sample`.
 
 ## Install
 
-Must use Python 2.7 due to protobuf dependency.
+Only works with Python 2.7.
 
 Install the necessary dependencies by running `pip install --upgrade -r requirements.txt`. Create a config file and then run the main script using `python main.py`.
 
