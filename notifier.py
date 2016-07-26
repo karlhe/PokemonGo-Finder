@@ -17,7 +17,10 @@ class Notifier:
 		self.slack_channel = self.str(data["slack_channel"])
 
 		if data["notify_ignore"]:
-			self.notify_ignore = [pokemon.lower().strip() for pokemon in data["notify_ignore"].split(',')]
+			self.notify_ignore = set([pokemon.lower().strip() for pokemon in data["notify_ignore"].split(',')])
+
+		if data["notify_far_ignore"]:
+			self.notify_far_ignore = set([pokemon.lower().strip() for pokemon in data["notify_far_ignore"].split(',')])
 
 		if data["notify_distance"]:
 			self.notify_distance = int(data["notify_distance"])
@@ -41,26 +44,32 @@ class Notifier:
 		pokename = self.str(pokemon["name"])
 		pokeid = str(pokemon["id"])
 
+		# Mark as "far" if outside distance limit
+		coordinates = (pokemon["lat"], pokemon["lng"])
+		far = False
+		distance = None
+		if self.notify_distance:
+			distance = self.distance(coordinates)
+			if self.distance(coordinates) > self.notify_distance:
+				self.debug("Pokemon {} is far away.".format(pokename))
+				far = True
+
 		# Don't notify if on ignore list
-		if self.notify_ignore:
+		if far:
+			if self.notify_far_ignore:
+				if pokename.lower() in self.notify_far_ignore or pokeid in self.notify_far_ignore:
+					self.debug("Ignored {}.".format(pokename))
+					return
+			else:
+				self.debug("Ignored {}.".format(pokename))
+				return
+		elif self.notify_ignore:
 			if pokename.lower() in self.notify_ignore or pokeid in self.notify_ignore:
 				self.debug("Ignored {}.".format(pokename))
 				return
 
-		# Don't notify if outside distance limit
-		coordinates = (pokemon["lat"], pokemon["lng"])
-		if self.notify_distance:
-			if self.distance(coordinates) > self.notify_distance:
-				self.debug("Pokemon {} was too far away.".format(pokename))
-				return
-
 		# We're good to notify!
 		self.debug("Notifying {}:{}.".format(pokeid, pokename))
-
-		# Get address
-		location = Nominatim().reverse("{}, {}".format(str(coordinates[0]), str(coordinates[1])))
-		# Truncate the address
-		address = ",".join(location.address.split(",")[0:2])
 
 		# Locate pokemon on GMAPS
 		maps_link = "http://maps.google.com/maps?q={},{}&20z".format(str(coordinates[0]), str(coordinates[1]))
@@ -69,7 +78,12 @@ class Notifier:
 		disappear_time = str(datetime.fromtimestamp(pokemon["disappear_time"]).strftime("%I:%M%p").lstrip('0'))
 
 		# Create notification
-		notification_text = "*{}* is here until *{}* at *{}* ({})".format(pokename, disappear_time, address, maps_link)
+		if far:
+			notification_text = "*{}* is {}m away until *{}* ({})".format(pokename, int(distance), disappear_time, maps_link)
+		else:
+			location = Nominatim().reverse("{}, {}".format(str(coordinates[0]), str(coordinates[1])))
+			address = ",".join(location.address.split(",")[0:2])
+			notification_text = "*{}* is nearby until *{}* at *{}* ({})".format(pokename, disappear_time, address, maps_link)
 
 		# Post to Slack
 		post_url = "https://slack.com/api/chat.postMessage"

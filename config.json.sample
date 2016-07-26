@@ -2,10 +2,11 @@
   "auth_service": "google",
   "username": "<username>@gmail.com",
   "password": "abc123",
-  "step_limit": 1,
+  "step_limit": 2,
   "location": "123 Fake Street, Springfield, IL",
   "slack_key": "abc123",
   "slack_channel": "#pokemon",
-  "notify_distance": None,
-  "notify_ignore": "doduo, zubat"
+  "notify_ignore": "doduo, zubat, spearow",
+  "notify_distance": 100,
+  "notify_far_ignore": "doduo, dodrio, zubat, golbat, spearow, fearow, rattata, raticate, pidgey, pidgeotto, poliwag, caterpie, metapod, weedle, kakuna, staryu, paras, pinsir, krabby, goldeen, bellsprout"
 }
