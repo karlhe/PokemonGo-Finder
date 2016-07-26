@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import flask
-import notifier
+from notifier import Notifier
 from flask import Flask, render_template
 from flask_googlemaps import GoogleMaps
 from flask_googlemaps import Map
@@ -549,6 +549,8 @@ def main():
     	global is_ampm_clock
     	is_ampm_clock = True
 
+    notifier = Notifier((FLOAT_LAT, FLOAT_LONG), debug)
+
     api_endpoint, access_token, profile_response = login(args)
 
     clear_stale_pokemons()
@@ -561,10 +563,6 @@ def main():
         ignore = [i.lower().strip() for i in args.ignore.split(',')]
     elif args.only:
         only = [i.lower().strip() for i in args.only.split(',')]
-
-    notify_ignore = []
-    if args.notify_ignore:
-        notify_ignore = [i.lower().strip() for i in args.notify_ignore.split(',')]
 
     pos = 1
     x = 0
@@ -585,7 +583,7 @@ def main():
         (x, y) = (x + dx, y + dy)
 
         process_step(args, api_endpoint, access_token, profile_response,
-                     pokemonsJSON, ignore, only, notify_ignore)
+                     pokemonsJSON, ignore, only, notifier)
 
         print('Completed: ' + str(
             ((step+1) + pos * .25 - .25) / (steplimit2) * 100) + '%')
@@ -604,7 +602,7 @@ def main():
 
 
 def process_step(args, api_endpoint, access_token, profile_response,
-                 pokemonsJSON, ignore, only, notify_ignore):
+                 pokemonsJSON, ignore, only, notifier):
     print('[+] Searching for Pokemon at location {} {}'.format(FLOAT_LAT, FLOAT_LONG))
     origin = LatLng.from_degrees(FLOAT_LAT, FLOAT_LONG)
     step_lat = FLOAT_LAT
@@ -688,28 +686,7 @@ transform_from_wgs_to_gcj(Location(Fort.Latitude, Fort.Longitude))
         }
 
         if poke.SpawnPointId not in pokemons:
-            do_notify = True
-
-            # Skip Pokemon on ignore list
-            if do_notify == True and args.notify_ignore:
-                if pokename.lower() in notify_ignore or pokeid in notify_ignore:
-                    debug("Pokemon {} was ignored.".format(pokename.encode('utf-8')))
-                    do_notify = False
-
-            # Skip Pokemon outside of given distance
-            # This only really makes sense if step_limit = 1, otherwise you get a swiss cheese map
-            if do_notify == True and args.notify_distance:
-                origin_coords = (step_lat, step_long)
-                poke_coords = (poke.Latitude, poke.Longitude)
-                distance = distance_in_meters(origin_coords, poke_coords)
-                debug("Pokemon {} found {}m away.".format(pokename.encode('utf-8'), distance))
-                if distance > int(args.notify_distance):
-                    debug("Pokemon {} was too far away.".format(pokename.encode('utf-8'), distance))
-                    do_notify = False
-
-            if do_notify == True:
-                debug("Notifying on {}...".format(pokename.encode('utf-8')))
-                notifier.pokemon_found(pokemon_obj)
+            notifier.pokemon_found(pokemon_obj)
 
         pokemons[poke.SpawnPointId] = pokemon_obj
 

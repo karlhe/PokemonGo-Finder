@@ -1,5 +1,4 @@
 from math import sqrt, sin, cos
-from geopy.distance import vincenty
 
 a = 6378245.0
 ee = 0.00669342162296594323
@@ -45,10 +44,6 @@ def transform_long(x, y):
     lon += (20.0 * sin(x * pi) + 40.0 * sin(x / 3.0 * pi)) * 2.0 / 3.0
     lon += (150.0 * sin(x / 12.0 * pi) + 300.0 * sin(x / 30.0 * pi)) * 2.0 / 3.0
     return lon
-
-# Approximates distance between 2 GPS coordinates in meters
-def distance_in_meters(point_a, point_b):
-    return vincenty(point_a, point_b).meters
 
 class Location:
     def __init__(self, latitude, longitude):
