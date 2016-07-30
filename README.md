@@ -15,6 +15,7 @@ Optional arguments:
 * `notify_distance`: Distance in meters within which to send notifications. if set to `None` will notify on everything.
 * `notify_ignore`: Comma-separated list of Pokemon to not send notifications for.
 * `notify_far_ignore`: If set along with `notify_distance`, will notify outside of the `notify_distance` if the Pokemon does not exist in `notify_far_ignore`. Useful for rarer pokemon.
+* `notify_schedule`: If set, only notifies on specified weekdays and/or hours of the day. See `config.json.sample` for an example. Weekday of 0 is Monday, and hour of 0 is midnight to before 1am.
 
 It is also recommended to use your own Google Maps API key, set it in `credentials.json`.
 

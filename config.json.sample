@@ -6,6 +6,10 @@
   "location": "123 Fake Street, Springfield, IL",
   "slack_key": "abc123",
   "slack_channel": "#pokemon",
+  "notify_schedule": {
+    "weekdays": [0,1,2,3,4],
+    "hours": [9,10,11,12,13,14,15,16,17,18,19,20]
+    },
   "notify_ignore": "doduo, zubat, spearow",
   "notify_distance": 100,
   "notify_far_ignore": "doduo, dodrio, zubat, golbat, spearow, fearow, rattata, raticate, pidgey, pidgeotto, poliwag, caterpie, metapod, weedle, kakuna, staryu, paras, pinsir, krabby, goldeen, bellsprout"

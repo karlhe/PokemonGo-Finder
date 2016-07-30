@@ -25,6 +25,13 @@ class Notifier:
 		if data["notify_distance"]:
 			self.notify_distance = int(data["notify_distance"])
 
+		if data["notify_schedule"]:
+			self.notify_schedule = True
+			if data["notify_schedule"]["weekdays"]:
+				self.notify_weekdays = set([int(day) for day in data["notify_schedule"]["weekdays"]])
+			if data["notify_schedule"]["hours"]:
+				self.notify_hours = set([int(hour) for hour in data["notify_schedule"]["hours"]])
+
 		# Set origin point to calculate distance from
 		self.origin = origin
 
@@ -39,8 +46,27 @@ class Notifier:
 		self.debug("Distance is {}m.".format(int(dist)))
 		return dist
 
+	def within_schedule(self):
+		if self.notify_schedule:
+			now = datetime.now()
+			if self.notify_weekdays and now.weekday() not in self.notify_weekdays:
+				self.debug("{} not in scheduled weekdays.".format(now.weekday()))
+				return False
+			if self.notify_hours and now.hour not in self.notify_hours:
+				self.debug("{} not in scheduled hours.".format(now.hour))
+				return False
+
+			# Passed all checks
+			return True
+		else:
+			# Scheduling not enabled
+			return True
+
 	# Notify user for discovered Pokemon
 	def pokemon_found(self, pokemon):
+		if not self.within_schedule():
+			return
+
 		pokename = self.str(pokemon["name"])
 		pokeid = str(pokemon["id"])
 
@@ -81,9 +107,7 @@ class Notifier:
 		if far:
 			notification_text = "*{}* is {}m away until *{}* ({})".format(pokename, int(distance), disappear_time, maps_link)
 		else:
-			location = Nominatim().reverse("{}, {}".format(str(coordinates[0]), str(coordinates[1])))
-			address = ",".join(location.address.split(",")[0:2])
-			notification_text = "*{}* is nearby until *{}* at *{}* ({})".format(pokename, disappear_time, address, maps_link)
+			notification_text = "*{}* is nearby until *{}* ({})".format(pokename, disappear_time, maps_link)
 
 		# Post to Slack
 		post_url = "https://slack.com/api/chat.postMessage"
